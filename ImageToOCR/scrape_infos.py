@@ -1,7 +1,8 @@
 '''Questo file gestisce lo scraping di informazioni dall'output di Google Cloud Vision.'''
 from Levenshtein import ratio as levenshtein_ratio
 
-def check_similarity(word: str, dataset: list[str]) -> bool:
+
+def check_similarity(word: str, dataset: list) -> bool:
     '''
     Questa funzione calcola un indice di similarità
     tra parola e dataset ritornando True se trova almeno
@@ -31,11 +32,11 @@ def find_in_vocab(word: str) -> str:
     italiani la parola più simile a 'word' e la ritorna
     '''
     with open("datasets/words_english.txt", "r") as voc:
-        vocab_en: list[str] = voc.read().splitlines()
+        vocab_en: list = voc.read().splitlines()
     with open("datasets/words_italian.txt", "r") as voc:
-        vocab_it: list[str] = voc.read().splitlines()
+        vocab_it: list = voc.read().splitlines()
     with open("datasets/my_vocab.txt", "r") as voc:
-        my_vocab: list[str] = voc.read().splitlines()
+        my_vocab: list = voc.read().splitlines()
     max_similarity: float = 0
     max_word: str = None
     for line in vocab_en:
@@ -56,7 +57,7 @@ def find_in_vocab(word: str) -> str:
         return word.upper()
 
 
-def scrape_infos(res: str) -> dict[str, str]:
+def scrape_infos(res: str) -> dict:
     '''
     Questa funzione prende in input una stringa
     contenente una risposta di Google Cloud Vision
@@ -69,13 +70,13 @@ def scrape_infos(res: str) -> dict[str, str]:
     y_com: int = None
     epsilon = 25  # Errore di tolleranza
     # Array symbols è per evitare che il titolo esca fuori uno dei caratteri speciali inutili che usano negli scontrino per far bellino
-    symbols: list[str] = ["*", "-", "/", "\\",
+    symbols: list = ["*", "-", "/", "\\",
                           "_", ".", ",", ":", ";", "+", "'"]
-    totales: list[str] = ["TOTALE", "TOTANE", "OTALE",
-                          "TOTAL", "T0TALE", "ToTALE", "HOTALE", "H0TALE"]
-    complessives: list[str] = ["COMPLESSIVO", "CONPLESSIVO", "OMPLESSIVO", "ONPLESSIVO", "COMPLESSIV0",
-                               "CONPLESSIV0", "COMPLESSIVo", "CoMPLESSIVO", "CoNPLESSIVO", "CONPLESSIVo", "cOMPLESSIVO", "cONPLESSIVO"]
-    temp_title: list[str] = []
+    totales: list = ["TOTALE", "TOTANE", "OTALE",
+                     "TOTAL", "T0TALE", "ToTALE", "HOTALE", "H0TALE"]
+    complessives: list = ["COMPLESSIVO", "CONPLESSIVO", "OMPLESSIVO", "ONPLESSIVO", "COMPLESSIV0",
+                          "CONPLESSIV0", "COMPLESSIVo", "CoMPLESSIVO", "CoNPLESSIVO", "CONPLESSIVo", "cOMPLESSIVO", "cONPLESSIVO"]
+    temp_title: list = []
     for item in res:
         if item.description not in symbols:
             y_title = item.bounding_poly.vertices[0].y

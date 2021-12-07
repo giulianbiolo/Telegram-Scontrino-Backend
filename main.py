@@ -3,9 +3,10 @@ import os
 import json
 from pathlib import Path
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
-from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import ReplyKeyboardMarkup
 from ImageToOCR.ocr import scrape_image
 from notion_manipulator import infos_to_notion
+
 
 def log_event(command: str, upd: Updater) -> None:
     '''Funzione che logga ogni evento causato dall'utente e dal bot'''
@@ -32,18 +33,22 @@ def start(update: Updater, _) -> None:
     '''Funzione per l'handling di /start'''
     log_event("start", update)
     if check_permissions(update) is True:
-        update.message.reply_text('Benvenuto '
-                                  + get_username(update)
-                                  + '.'
-                                  + HELP_REPLY,
-                                  reply_markup=ReplyKeyboardMarkup(
-                                    [['Start', 'Help', 'Contabilizza']],
-                                    one_time_keyboard=False
-                                  )
-                                  )
+        update.message.reply_text(
+            'Benvenuto '
+            + get_username(update)
+            + '.'
+            + HELP_REPLY,
+            reply_markup=ReplyKeyboardMarkup(
+                [['Start', 'Help', 'Contabilizza']],
+                one_time_keyboard=False
+            )
+        )
     else:
-        reply_user("Mi dispiace " + get_username(update) +
-                   " ma non hai il permesso di eseguire questo bot.", update)
+        reply_user(
+            "Mi dispiace " + get_username(update) +
+            " ma non hai il permesso di eseguire questo bot.",
+            update
+        )
 
 
 def handle_help(update: Updater, _) -> None:
@@ -52,8 +57,11 @@ def handle_help(update: Updater, _) -> None:
     if check_permissions(update) is True:
         reply_user(HELP_REPLY, update)
     else:
-        reply_user("Mi dispiace " + get_username(update) +
-                   " ma non hai il permesso di eseguire questo bot.", update)
+        reply_user(
+            "Mi dispiace " + get_username(update) +
+            " ma non hai il permesso di eseguire questo bot.",
+            update
+        )
 
 
 def handle_error(update: Updater, _) -> None:
@@ -61,18 +69,14 @@ def handle_error(update: Updater, _) -> None:
     print("Errore: ")
     print(update)
     try:
-        reply_user("C'è stato un errore! Presto chiamate gli sviluppatori!", update)
+        reply_user(
+            "C'è stato un errore! Presto chiamate gli sviluppatori!", update)
     except AttributeError:
         try:
             update.callback_query.message.reply_text(
                 "C'è stato un errore! Presto chiamate gli sviluppatori!")
         except AttributeError:
             pass
-
-
-def contab(update: Updater) -> None:
-    '''Funzione che gestisce la contabilizzazione su Notion'''
-    return None
 
 
 def handle_text(update: Updater, _) -> None:
@@ -92,33 +96,26 @@ def handle_text(update: Updater, _) -> None:
 
 def handle_callback_query(update: Updater, _) -> None:
     '''Funzione per handling di messaggi inline'''
-    print("-> Data: " + update.callback_query.data)    
+    print("-> Data: " + update.callback_query.data)
     if update.callback_query.data is not None:
-        data_in = update.callback_query.data
         print(" -> " + get_username(update.callback_query) +
-                " ha richiesto la contabilizzazione di un nuovo scontrino. ")
+              " ha richiesto la contabilizzazione di un nuovo scontrino. ")
         reply_user(
             ("Potrebbe volerci qualche secondo,"
                 " prenditi un caffè nel mentre."),
             update.callback_query
         )
-        # Eseguo il comando di contabilizzazione
-        # response = image_to_notion(data_in)
-        print(" -> Rispondo a " + get_username(update.callback_query) + " con:")
-        # Risposta al callback
-        # reply_user(response, update.callback_query)
     return None
 
 
 def image_handler(update: Updater, _) -> None:
     '''Funzione che gestisce l'invio di immagini'''
     print("Inviata immagine senza compressione.")
-    return reply_user("Inviamela senza compressione pezzemmerd!", update)
+    return reply_user("Inviamela senza compressione, per favore!", update)
 
 
 def file_handler(update: Updater, context) -> None:
     '''Funzione che gestisce il download di file'''
-    # context.bot.get_file(update.message.document).download()
     # Salvo l'immagine nella cartella 'images'
     with open("images/image.png", 'wb') as img_file:
         context.bot.get_file(update.message.document).download(out=img_file)
@@ -129,21 +126,17 @@ def file_handler(update: Updater, context) -> None:
     # os.remove("detected/images/image.png")
     if 'message' in scraped_data.keys():
         return reply_user(scraped_data['message'], update)
-    
-    reply_user(f"Titolo: {scraped_data['title']}, Price: {scraped_data['price']}", update)
+    reply_user(
+        f"Titolo: {scraped_data['title']}, Price: {scraped_data['price']}", update)
     if infos_to_notion(scraped_data) is True:
         return reply_user("Contabilizzazione su Notion completata con successo!", update)
     else:
         return reply_user("Contabilizzazione su Notion non riuscita!", update)
 
 
-
 def check_permissions(update: Updater) -> bool:
     '''Funzione che controlla se l'utente ha il permesso di svolgere un dato comando'''
-    permitted = ['Giulian']
-    if get_username(update) in permitted:
-        return True
-    return False
+    return get_username(update) in ['Giulian']
 
 
 def main() -> None:
@@ -163,20 +156,15 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("help", handle_help))
     dispatcher.add_handler(MessageHandler(Filters.photo, image_handler))
     dispatcher.add_handler(MessageHandler(Filters.document, file_handler))
-
     # Aggiungo l'handler per testo normale
     dispatcher.add_handler(MessageHandler(Filters.text, handle_text))
-
     # Aggiungo l'handler per i messaggi inline
     dispatcher.add_handler(CallbackQueryHandler(handle_callback_query))
-
     # add an handler for errors
     # dispatcher.add_error_handler(handle_error)
-
     print("Bot inizializzato con successo!")
     # Eseguo il bot
     updater.start_polling()
-
     # Tengo aperto il bot finchè non viene richiesto Ctrl+C
     updater.idle()
 

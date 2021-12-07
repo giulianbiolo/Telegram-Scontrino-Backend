@@ -34,9 +34,13 @@ def infos_to_notion(infos: dict) -> bool:
         page.locked = False
     cv: CollectionView = client.get_collection_view(
         "https://www.notion.so/giulianbiolo/011e1a10299e43acb76dddabd4b578e5?v=69a914defca9426299d15c0b9d4dac9f")
-    row = cv.collection.add_row()
-    row.Spesa = infos['title']
-    row.Prezzo = float(infos['price'].replace(",", "."))
+    try:
+        row = cv.collection.add_row()
+        row.Spesa = infos['title']
+        row.Prezzo = float(infos['price'].replace("€", "").replace(", ", "."))
+    except:
+        print("Errore nell'invio delle informazioni.")
+        return False
     return True
 
 
@@ -48,10 +52,10 @@ def check_infos_integrity(infos: dict) -> bool:
         return False
     if 'price' not in infos.keys():
         return False
-    if isinstance(infos['title'], str) is False:
+    if isinstance(infos['title'], str) is False or isinstance(infos['price'], str) is False:
         return False
     try:
-        float(infos['price'].replace(",", "."))
+        float(infos['price'].replace("€", "").replace(",", "."))
     except ValueError:
         return False
     return True

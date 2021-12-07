@@ -21,18 +21,6 @@ def detect_text(path: str, method: str) -> str:
     else:
         response = client.text_detection(image=image)
     texts = response.text_annotations
-
-    '''
-    # Questo codice è per stampare tutti i testi trovati con le relative coordinate
-    for text in texts:
-        print('\n"{}"'.format(text.description))
-
-        vertices = (['({},{})'.format(vertex.x, vertex.y)
-                    for vertex in text.bounding_poly.vertices])
-
-        print('bounds: {}'.format(','.join(vertices)))
-    '''
-
     # Handling errori di vision
     if response.error.message:
         raise Exception(
