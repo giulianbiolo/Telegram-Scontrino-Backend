@@ -1,9 +1,11 @@
 '''File che gestisce creazione e meccaniche del bot telegram di Scontrino.'''
+import os
 import json
 from pathlib import Path
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from ImageToOCR.ocr import scrape_image
+from notion_manipulator import infos_to_notion
 
 def log_event(command: str, upd: Updater) -> None:
     '''Funzione che logga ogni evento causato dall'utente e dal bot'''
@@ -123,14 +125,16 @@ def file_handler(update: Updater, context) -> None:
     reply_user("Immagine scaricata, contabilizzo...", update)
     # Eseguo il comando di contabilizzazione
     scraped_data: dict = scrape_image("images/image.png")
+    os.remove("images/image.png")
+    os.remove("detected/images/image.png")
     if 'message' in scraped_data.keys():
         return reply_user(scraped_data['message'], update)
     
-    return reply_user(f"Titolo: {scraped_data['title']}, Iva: {scraped_data['iva']}, Price: {scraped_data['price']}", update)
-    # response = image_to_notion('images/image.png')
-    # print(" -> Rispondo a " + get_username(update) + " con:")
-    # Risposta al callback
-    # reply_user(response, update)
+    reply_user(f"Titolo: {scraped_data['title']}, Iva: {scraped_data['iva']}, Price: {scraped_data['price']}", update)
+    if infos_to_notion(scraped_data) is True:
+        return reply_user("Contabilizzazione su Notion completata con successo!", update)
+    else:
+        return reply_user("Contabilizzazione su Notion non riuscita!", update)
 
 
 
@@ -149,7 +153,7 @@ def main() -> None:
     path: Path = Path(__file__).parent / 'token.json'
     with path.open("r", encoding="UTF-8") as json_data_file:
         config = json.load(json_data_file)
-        telegram_bot_token = config['telegramBotToken']
+        telegram_bot_token = config['telegram_bot_token']
     # Creo l'updater ed il dispatcher
     updater = Updater(telegram_bot_token, use_context=True)
     dispatcher = updater.dispatcher

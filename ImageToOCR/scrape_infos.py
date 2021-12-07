@@ -1,4 +1,4 @@
-'''Questo file gestisce lo scraping di informazioni dall'output di Google Cloud Vision'''
+'''Questo file gestisce lo scraping di informazioni dall'output di Google Cloud Vision.'''
 
 def scrape_infos(res: str) -> dict:
     '''

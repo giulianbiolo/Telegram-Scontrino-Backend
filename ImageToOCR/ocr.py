@@ -1,3 +1,4 @@
+'''Questo file è il file principale per la parte di OCR.'''
 from ImageToOCR.text_detector import detect_text
 from ImageToOCR.scrape_infos import scrape_infos
 from ImageToOCR.img_manipulator import enhance_image
