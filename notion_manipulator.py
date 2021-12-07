@@ -34,16 +34,12 @@ def infos_to_notion(infos: dict) -> bool:
         page.locked = False
     cv: CollectionView = client.get_collection_view(
         "https://www.notion.so/giulianbiolo/011e1a10299e43acb76dddabd4b578e5?v=69a914defca9426299d15c0b9d4dac9f")
-    try:
-        row = cv.collection.add_row()
-        row.Spesa = infos['title']
-        if isinstance(infos['price'], float):
-            row.Prezzo = infos['price']
-        else:
-            row.Prezzo = float(infos['price'].replace("€", "").replace(", ", "."))
-    except:
-        print("Errore nell'invio delle informazioni.")
-        return False
+    row = cv.collection.add_row()
+    row.Spesa = infos['title']
+    if isinstance(infos['price'], float):
+        row.Prezzo = infos['price']
+    else:
+        row.Prezzo = float(infos['price'].replace("€", "").replace(",", "."))
     return True
 
 
