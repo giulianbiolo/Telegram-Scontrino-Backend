@@ -37,7 +37,10 @@ def infos_to_notion(infos: dict) -> bool:
     try:
         row = cv.collection.add_row()
         row.Spesa = infos['title']
-        row.Prezzo = float(infos['price'].replace("€", "").replace(", ", "."))
+        if isinstance(infos['price'], float):
+            row.Prezzo = infos['price']
+        else:
+            row.Prezzo = float(infos['price'].replace("€", "").replace(", ", "."))
     except:
         print("Errore nell'invio delle informazioni.")
         return False
@@ -52,7 +55,7 @@ def check_infos_integrity(infos: dict) -> bool:
         return False
     if 'price' not in infos.keys():
         return False
-    if isinstance(infos['title'], str) is False or isinstance(infos['price'], str) is False:
+    if isinstance(infos['title'], str) is False or (isinstance(infos['price'], str) is False and isinstance(infos['price'], float) is False):
         return False
     try:
         float(infos['price'].replace("€", "").replace(",", "."))
