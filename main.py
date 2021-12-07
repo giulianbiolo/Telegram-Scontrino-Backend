@@ -130,7 +130,7 @@ def file_handler(update: Updater, context) -> None:
     if 'message' in scraped_data.keys():
         return reply_user(scraped_data['message'], update)
     
-    reply_user(f"Titolo: {scraped_data['title']}, Iva: {scraped_data['iva']}, Price: {scraped_data['price']}", update)
+    reply_user(f"Titolo: {scraped_data['title']}, Price: {scraped_data['price']}", update)
     if infos_to_notion(scraped_data) is True:
         return reply_user("Contabilizzazione su Notion completata con successo!", update)
     else:

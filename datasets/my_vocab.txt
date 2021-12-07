@@ -1,0 +1,10 @@
+povo
+povo 1
+povo 2
+eurospesa
+s.giovanni
+lupatoto
+*
+#
+.
+-
