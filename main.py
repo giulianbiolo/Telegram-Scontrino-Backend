@@ -126,7 +126,7 @@ def file_handler(update: Updater, context) -> None:
     # Eseguo il comando di contabilizzazione
     scraped_data: dict = scrape_image("images/image.png")
     os.remove("images/image.png")
-    os.remove("detected/images/image.png")
+    # os.remove("detected/images/image.png")
     if 'message' in scraped_data.keys():
         return reply_user(scraped_data['message'], update)
     

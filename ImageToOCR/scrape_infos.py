@@ -1,7 +1,6 @@
 '''Questo file gestisce lo scraping di informazioni dall'output di Google Cloud Vision.'''
 from Levenshtein import ratio as levenshtein_ratio
 
-
 def check_similarity(word: str, dataset: list[str]) -> bool:
     '''
     Questa funzione calcola un indice di similarità
