@@ -9,52 +9,18 @@ def check_similarity(word: str, dataset: list) -> bool:
     una parola nel dataset con similarità > threshold
     nei rispetti del primo argomento 'word'
     '''
-    #  Caso base, se word è in dataset non calcolo neanche la similarità
+    # * Caso base, se word è in dataset non calcolo neanche la similarità
     if word.lower() in dataset or word in dataset:
         return True
     similarity: float = 0
+    # * Calcolo il ratio di Levenshtein tra word ed item massimo
     for item in dataset:
-        # Calculate the Levenshtein distance between word and item
         if levenshtein_ratio(word.lower(), item.lower()) > similarity:
             similarity = levenshtein_ratio(word.lower(), item.lower())
         if levenshtein_ratio(word, item) > similarity:
             similarity = levenshtein_ratio(word, item)
-    # If the similarity is greater than the threshold, return True
-    if similarity > 0.75:
-        # print("Similarity: ", similarity, " for word: ", word)
-        return True
-    return False
-
-
-def find_in_vocab(word: str) -> str:
-    '''
-    Questa funzione ricerca nei vocabolari inglesi ed
-    italiani la parola più simile a 'word' e la ritorna
-    '''
-    with open("datasets/words_english.txt", "r") as voc:
-        vocab_en: list = voc.read().splitlines()
-    with open("datasets/words_italian.txt", "r") as voc:
-        vocab_it: list = voc.read().splitlines()
-    with open("datasets/my_vocab.txt", "r") as voc:
-        my_vocab: list = voc.read().splitlines()
-    max_similarity: float = 0
-    max_word: str = None
-    for line in vocab_en:
-        if levenshtein_ratio(word.lower(), line) > max_similarity:
-            max_similarity = levenshtein_ratio(word.lower(), line)
-            max_word = line
-    for line in vocab_it:
-        if levenshtein_ratio(word.lower(), line) > max_similarity:
-            max_similarity = levenshtein_ratio(word.lower(), line)
-            max_word = line
-    for line in my_vocab:
-        if levenshtein_ratio(word.lower(), line) > max_similarity:
-            max_similarity = levenshtein_ratio(word.lower(), line)
-            max_word = line
-    if max_similarity > 0.88:
-        return max_word.upper()
-    else:
-        return word.upper()
+    # * Se similarity è maggiore di threshold ritorno True, altrimenti False
+    return similarity > 0.85
 
 
 def scrape_infos(res: str) -> dict:
@@ -64,46 +30,78 @@ def scrape_infos(res: str) -> dict:
     e restituisce un dizionario con le informazioni contenute
     res: stringa contenente una risposta di Google Cloud Vision
     '''
-    # Y_TOT: posizione y di dove si trova 'Totale'
-    # Y_COM: posizione y di dove si trova 'Complessivo'
-    y_tot: int = None
-    y_com: int = None
-    epsilon = 25  # Errore di tolleranza
-    # Array symbols è per evitare che il titolo esca fuori uno dei caratteri speciali inutili che usano negli scontrino per far bellino
-    symbols: list = ["*", "-", "/", "\\",
-                          "_", ".", ",", ":", ";", "+", "'"]
-    totales: list = ["TOTALE", "TOTANE", "OTALE",
-                     "TOTAL", "T0TALE", "ToTALE", "HOTALE", "H0TALE"]
-    complessives: list = ["COMPLESSIVO", "CONPLESSIVO", "OMPLESSIVO", "ONPLESSIVO", "COMPLESSIV0",
-                          "CONPLESSIV0", "COMPLESSIVo", "CoMPLESSIVO", "CoNPLESSIVO", "CONPLESSIVo", "cOMPLESSIVO", "cONPLESSIVO"]
-    temp_title: list = []
+    symbols: list = ["*", "-", "/", "\\", "_", ".", ",", ":", ";", "+", "'"]
+    totales: list = ["totale", "t0tale", "hotale", "h0tale", "totane", "t0tane", "hotane", "h0tane"]
+    numbers_array: list = list()
+    pos_numbers_array: list = list()
+    epsilon: float = 25.00  # ? Errore di tolleranza
+
+    # ? Taglio la risposta a solo il 90% superiore dello scontrino
+    res = [
+        item for item in res
+        if item.bounding_poly.vertices[0].y < 0.90 * max([
+            item.bounding_poly.vertices[0].y for item in res
+        ])
+    ]
+    # ? Trovo la coordinata 'y' della parola 'totale'
+    y_totale: float = [
+        item.bounding_poly.vertices[0].y
+        for item in res
+        if check_similarity(item.description, totales)
+    ][0]
+    # * Trovo il titolo dello scontrino prendendo
+    # * le parole più vicine in altezza alla prima parola in lista
+    title: str = " ".join([
+        item.description for item in res
+        if abs(item.bounding_poly.vertices[0].y - [
+            # ? Questo è y_title
+            item.bounding_poly.vertices[0].y
+            for item in res
+            if item.description not in symbols
+        ][0]) < epsilon
+        and len(item.description) < 12 and item.description != ""
+    ])
     for item in res:
-        if item.description not in symbols:
-            y_title = item.bounding_poly.vertices[0].y
+        # ? Creo l'array numbers_array di numeri validi da res
+        nan: bool = False
+        if "," in item.description or "." in item.description:
+            try:
+                float(item.description.replace("€", "").replace(",", "."))
+            except ValueError:
+                nan = True
+                pass
+        else:
+            nan = True
+        if not nan:
+            try:
+                if len(item.description.split(",")) > 1 and len(item.description.split(",")[1]) > 1:
+                    numbers_array.append(
+                        item.description.replace("€", "").replace(",", "."))
+                    pos_numbers_array.append(
+                        abs(item.bounding_poly.vertices[0].y - y_totale))
+                    continue
+                if len(item.description.split(".")) > 1 and len(item.description.split(".")[1]) > 1:
+                    numbers_array.append(
+                        item.description.replace("€", "").replace(",", "."))
+                    pos_numbers_array.append(
+                        abs(item.bounding_poly.vertices[0].y - y_totale))
+                    continue
+            except ValueError:
+                pass
+
+    # * Peso tutti i numeri validi con y_totale ordinandoli per distanza dal totale
+    # * Infine scelgo il primo numero valido in lista con occorrenze == max_occorrenze
+    # * Facendo così anche se ho 2 valori con stesse occorrenze
+    # * preferenzio la più vicina alla scritta "TOTALE"
+    # ? Trovo numero massimo di occorrenze in numbers_array
+    n_occ_max: int = max([numbers_array.count(item) for item in numbers_array])
+    # ? Sorto numbers_array per distanza da y_totale usando pos_numbers_array
+    numbers_array = [item for _, item in sorted(
+        zip(pos_numbers_array, numbers_array))]
+    # ? Prendo il primo numero con almeno n_occ_max - 1 occorrenze
+    for item in numbers_array:
+        if numbers_array.count(item) == n_occ_max:
+            price: str = item.replace("€", "").replace(",", ".")
             break
-    for item in res:
-        if item.bounding_poly.vertices[0].y < y_title + epsilon and item.bounding_poly.vertices[0].y > y_title - epsilon and len(item.description) < 12:
-            temp_title.append(item.description)
-    temp_title = [find_in_vocab(x) for x in temp_title if x != ""]
-    title: str = " ".join(temp_title)
-    for item in res:
-        if check_similarity(item.description, totales):
-            y_tot = item.bounding_poly.vertices[0].y
-            continue
-        if check_similarity(item.description, complessives):
-            y_com = item.bounding_poly.vertices[1].y
-            continue
-    # Se non trovo il totale o complessivo, non posso neanche calcolarmi dove si trova il prezzo, quindi ritorno None
-    if y_tot is None or y_com is None:
-        return None
-    # Calcolo la posizione del prezzo
-    diff: int = (y_tot - y_com) * 2
-    y_price: int = y_com - diff
-    price: str = None
-    for item in res:
-        # Trovo il prezzo, che si trova a y_price, ed è una stringa
-        # Mi assicuro di non scambiare il prezzo con 'totale' o 'complessivo'
-        if not (check_similarity(item.description, totales) or check_similarity(item.description, complessives)):
-            if item.bounding_poly.vertices[0].y >= y_price - epsilon and item.bounding_poly.vertices[0].y <= y_price + epsilon:
-                price = item.description
+
     return dict(title=title, price=price)

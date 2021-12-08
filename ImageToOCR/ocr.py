@@ -77,5 +77,4 @@ if __name__ == '__main__':
     scrape_image('images/eurospesa.jpg')
     scrape_image('images/povo.jpg')
     scrape_image('images/povo2.jpg')
-    scrape_image('images/diff.jpg')
 '''
