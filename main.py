@@ -90,8 +90,9 @@ def handle_text(update: Updater, _) -> None:
         if update.message.text == "Contabilizza":
             return reply_user("Ok, sono pronto, inviami un'immagine e contabilizzo subito!", update)
     else:
-        reply_user("Mi dispiace " + get_username(update) +
+        return reply_user("Mi dispiace " + get_username(update) +
                    " ma non hai il permesso di eseguire questo bot.", update)
+    return None
 
 
 def handle_callback_query(update: Updater, _) -> None:
@@ -105,7 +106,6 @@ def handle_callback_query(update: Updater, _) -> None:
                 " prenditi un caffè nel mentre."),
             update.callback_query
         )
-    return None
 
 
 def image_handler(update: Updater, _) -> None:
@@ -124,14 +124,13 @@ def file_handler(update: Updater, context) -> None:
     scraped_data: dict = scrape_image("images/image.png")
     os.remove("images/image.png")
     # os.remove("detected/images/image.png")
-    if 'message' in scraped_data.keys():
+    if 'message' in scraped_data:
         return reply_user(scraped_data['message'], update)
     reply_user(
         f"Titolo: {scraped_data['title']}, Price: {scraped_data['price']}", update)
     if infos_to_notion(scraped_data) is True:
         return reply_user("Contabilizzazione su Notion completata con successo!", update)
-    else:
-        return reply_user("Contabilizzazione su Notion non riuscita!", update)
+    return reply_user("Contabilizzazione su Notion non riuscita!", update)
 
 
 def check_permissions(update: Updater) -> bool:
