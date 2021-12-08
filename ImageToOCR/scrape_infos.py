@@ -44,23 +44,30 @@ def scrape_infos(res: str) -> dict:
         ])
     ]
     # ? Trovo la coordinata 'y' della parola 'totale'
-    y_totale: float = [
-        item.bounding_poly.vertices[0].y
-        for item in res
-        if check_similarity(item.description, totales)
-    ][0]
-    # * Trovo il titolo dello scontrino prendendo
-    # * le parole più vicine in altezza alla prima parola in lista
-    title: str = " ".join([
-        item.description for item in res
-        if abs(item.bounding_poly.vertices[0].y - [
-            # ? Questo è y_title
+    try:
+        y_totale: float = [
             item.bounding_poly.vertices[0].y
             for item in res
-            if item.description not in symbols
-        ][0]) < epsilon
-        and len(item.description) < 12 and item.description != ""
-    ])
+            if check_similarity(item.description, totales)
+        ][0]
+    except IndexError:
+        return None
+    
+    # * Trovo il titolo dello scontrino prendendo
+    # * le parole più vicine in altezza alla prima parola in lista
+    try:
+        title: str = " ".join([
+            item.description for item in res
+            if abs(item.bounding_poly.vertices[0].y - [
+                # ? Questo è y_title
+                item.bounding_poly.vertices[0].y
+                for item in res
+                if item.description not in symbols
+            ][0]) < epsilon
+            and len(item.description) < 12 and item.description != ""
+        ])
+    except IndexError:
+        title: str = "Scontrino"
     for item in res:
         # ? Creo l'array numbers_array di numeri validi da res
         nan: bool = False
