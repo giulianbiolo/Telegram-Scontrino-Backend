@@ -32,14 +32,12 @@ def scrape_image(path: str) -> dict:
 
 def best_infos(infos_def: dict, infos_doc: dict) -> dict:
     """Ritorna il miglior dizionario di informazioni."""
-    # Caso migliore, entrambi hanno trovato la stessa soluzione
-    if infos_def == infos_doc:
-        return infos_def
-
     # Caso peggiore, entrambi None
     if infos_doc is None and infos_def is None:
         return dict(title="", price="0.00")
-
+    # Caso migliore, entrambi hanno trovato la stessa soluzione
+    if infos_def == infos_doc:
+        return infos_def
     # Valuto la validità di 'price' di entrambi
     infos_doc_price_valid: bool = False
     infos_def_price_valid: bool = False
@@ -55,7 +53,7 @@ def best_infos(infos_def: dict, infos_doc: dict) -> dict:
                 string_to_price(infos_def["price"])
                 infos_def_price_valid = True
             else:
-                return dict(title="", price="0.00")
+                return dict(title=infos_doc['title'], price="0.00")
         except:
             # se nessuno dei due ha 'price' valido, ritorno 0.00 come 'price'
             return dict(title=infos_doc["title"], price="0.00")
@@ -69,12 +67,10 @@ def best_infos(infos_def: dict, infos_doc: dict) -> dict:
         return infos_doc
     if infos_def_price_valid:
         return infos_def
+    return infos_doc
 
-
-'''
-if __name__ == '__main__':
-    scrape_image('images/burger.jpg')
-    scrape_image('images/eurospesa.jpg')
-    scrape_image('images/povo.jpg')
-    scrape_image('images/povo2.jpg')
-'''
+#if __name__ == '__main__':
+#    scrape_image('images/burger.jpg')
+#    scrape_image('images/eurospesa.jpg')
+#    scrape_image('images/povo.jpg')
+#    scrape_image('images/povo2.jpg')

@@ -1,6 +1,6 @@
 '''Questo file gestisce il riconoscimento di testo in un'immagine.'''
-from google.cloud import vision
 import io
+from google.cloud import vision
 
 
 def detect_text(path: str, method: str) -> str:
@@ -24,7 +24,7 @@ def detect_text(path: str, method: str) -> str:
     # Handling errori di vision
     if response.error.message:
         raise Exception(
-            '{}\nFor more info on error messages, check: '
-            'https://cloud.google.com/apis/design/errors'.format(
-                response.error.message))
+            f'{response.error.message}\nFor more info on error messages, check: '
+            'https://cloud.google.com/apis/design/errors'
+        )
     return texts

@@ -32,8 +32,8 @@ def scrape_infos(res: str) -> dict:
     '''
     symbols: list = ["*", "-", "/", "\\", "_", ".", ",", ":", ";", "+", "'"]
     totales: list = ["totale", "t0tale", "hotale", "h0tale", "totane", "t0tane", "hotane", "h0tane"]
-    numbers_array: list = list()
-    pos_numbers_array: list = list()
+    numbers_array: list = []
+    pos_numbers_array: list = []
     epsilon: float = 25.00  # ? Errore di tolleranza
 
     # ? Taglio la risposta a solo il 90% superiore dello scontrino
@@ -52,7 +52,7 @@ def scrape_infos(res: str) -> dict:
         ][0]
     except IndexError:
         return None
-    
+
     # * Trovo il titolo dello scontrino prendendo
     # * le parole più vicine in altezza alla prima parola in lista
     try:
@@ -76,7 +76,6 @@ def scrape_infos(res: str) -> dict:
                 float(item.description.replace("€", "").replace(",", "."))
             except ValueError:
                 nan = True
-                pass
         else:
             nan = True
         if not nan:
