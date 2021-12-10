@@ -69,8 +69,11 @@ def best_infos(infos_def: dict, infos_doc: dict) -> dict:
         return infos_def
     return infos_doc
 
-#if __name__ == '__main__':
-#    scrape_image('images/burger.jpg')
-#    scrape_image('images/eurospesa.jpg')
-#    scrape_image('images/povo.jpg')
-#    scrape_image('images/povo2.jpg')
+'''
+if __name__ == '__main__':
+    scrape_image("images/12oz.jpg")
+    scrape_image('images/burger.jpg')
+    scrape_image('images/eurospesa.jpg')
+    scrape_image('images/povo.jpg')
+    scrape_image('images/povo2.jpg')
+'''

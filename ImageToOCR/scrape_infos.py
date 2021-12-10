@@ -31,7 +31,8 @@ def scrape_infos(res: str) -> dict:
     res: stringa contenente una risposta di Google Cloud Vision
     '''
     symbols: list = ["*", "-", "/", "\\", "_", ".", ",", ":", ";", "+", "'"]
-    totales: list = ["totale", "t0tale", "hotale", "h0tale", "totane", "t0tane", "hotane", "h0tane"]
+    totales: list = ["totale", "t0tale", "hotale",
+                     "h0tale", "totane", "t0tane", "hotane", "h0tane"]
     numbers_array: list = []
     pos_numbers_array: list = []
     epsilon: float = 25.00  # ? Errore di tolleranza
@@ -68,10 +69,29 @@ def scrape_infos(res: str) -> dict:
         ])
     except IndexError:
         title: str = "Scontrino"
+
+    # *** Ricerca Del Prezzo ***
+    # ? Trovo la media delle 'x' dei numeri con la virgola nello scontrino
+    # ? ( principalmente quelli sulla fila a destra )
+    avg_x_pos: float = sum([
+        item.bounding_poly.vertices[0].x for item in res
+        if (("," in item.description or "." in item.description or "€" in item.description)
+            and (item.description.replace(",", "").replace(".", "").replace("€", "").isdigit())
+            and "%" not in item.description)
+    ]) / len([
+        item.bounding_poly.vertices[0].x for item in res
+        if (("," in item.description or "." in item.description or "€" in item.description)
+            and (item.description.replace(",", "").replace(".", "").replace("€", "").isdigit())
+            and "%" not in item.description)
+    ])
+    # ? Taglio res a solo i valori numerici più a destra del punto medio
+    res = [item for item in res if item.bounding_poly.vertices[0].x > avg_x_pos]
+    # print("AVG X POS: ", avg_x_pos)
+
     for item in res:
         # ? Creo l'array numbers_array di numeri validi da res
         nan: bool = False
-        if "," in item.description or "." in item.description:
+        if ("," in item.description or "." in item.description) and "%" not in item.description:
             try:
                 float(item.description.replace("€", "").replace(",", "."))
             except ValueError:
@@ -104,6 +124,7 @@ def scrape_infos(res: str) -> dict:
     # ? Sorto numbers_array per distanza da y_totale usando pos_numbers_array
     numbers_array = [item for _, item in sorted(
         zip(pos_numbers_array, numbers_array))]
+    # print("numbers_array: ", numbers_array)
     # ? Prendo il primo numero con almeno n_occ_max - 1 occorrenze
     for item in numbers_array:
         if numbers_array.count(item) == n_occ_max:
